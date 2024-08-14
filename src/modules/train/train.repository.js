@@ -4,6 +4,7 @@ import BaseRepository from "../base/base.repository.js";
 import pagination from "../../utils/pagination.js";
 import withTransaction from "../../middleware/transactions/withTransaction.js";
 import { TrainSchema } from "../../models/index.js";
+import { NotFoundError } from "../../utils/errors.js";
 
 
 class TrainRepository extends BaseRepository {
@@ -15,6 +16,10 @@ class TrainRepository extends BaseRepository {
 
     async createTrain(payload, session) {
         const { name,number,station,fareRatePerStop } = payload;
+        // name or number allrady exits 
+        const trainExists = await this.#model.exists({ $or: [{ name: name }, { number: number }] });
+        if (trainExists) throw new NotFoundError("Train already exists");
+
         console.log('payload',payload);
         const stops = [];
         const stations = JSON.parse(station);
@@ -39,17 +44,38 @@ class TrainRepository extends BaseRepository {
     }
 
     async updateTrain(payload , id) {
-        const { name,number,station,fareRatePerStop } = payload;
-        console.log('payload',payload);
-        const stops = [];
-        const stations = JSON.parse(station);
-        for (const station of stations) {
-            const stop = {
-                station: station.id,
-                order: stations.indexOf(station) + 1
-            };
-            stops.push(stop);  
+        const { name, number, station, fareRatePerStop } = payload;
+        const trainExists = await this.#model.exists({ _id: id });
+        if (!trainExists) throw new NotFoundError("Train not found");
+        const conflictingTrain = await this.#model.findOne({
+            $or: [
+                { name: name },
+                { number: number }
+            ],
+            _id: { $ne: id } 
+        });
+        
+        if (conflictingTrain) throw new NotFoundError('Train name or number already exists');
+    
+        let stations;
+        try {
+            stations = JSON.parse(station);
+        } catch (error) {
+            throw new Error('Invalid station data');
         }
+        const stops = stations.map((station, index) => ({
+            station: station.id,
+            order: index + 1
+        }));
+    
+        const updatedTrain = await this.#model.findByIdAndUpdate(id, {
+            name,
+            number,
+            stops,
+            fareRatePerStop
+        }, { new: true });
+    
+        return updatedTrain;
     }
 
     async deleteTrain(id) {

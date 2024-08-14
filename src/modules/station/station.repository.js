@@ -18,6 +18,7 @@ class StationRepository extends BaseRepository {
         const { name, state, city } = payload;
         // chek this name already exit 
         const checkStation = await this.#model.findOne({ name });
+        console.log('checkStation',checkStation);
         if (checkStation) throw new NotFoundError('Station already exist');
         
         const station = new this.#model({

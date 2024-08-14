@@ -39,8 +39,8 @@ class TrainService extends BaseService {
     }
 	
 	async updateTrain(payload , id) {
-		const merchant = await this.#repository.updateTrain(payload,id);
-		return merchant;
+		const train = await this.#repository.updateTrain(payload,id);
+		return train;
 	}
 
     async deleteTrain(id) {
