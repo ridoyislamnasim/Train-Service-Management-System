@@ -17,18 +17,16 @@ const trainSchema = new mongoose.Schema({
           ref: 'Station',
           required: true
         },
-        arrivalTime: {
-          type: Date,
+        order: {
+          type: Number,
           required: true
-        },
-        departureTime: {
-          type: Date,
-          required: true
-        },
-        // order
+        }
       }
     ],
-    // fareRatePerStop
+    fareRatePerStop: {
+      type: Number,
+      required: true
+    },
     daysOfOperation: {
       type: [String], 
       required: true

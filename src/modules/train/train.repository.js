@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import BaseRepository from "../base/base.repository.js";
 import pagination from "../../utils/pagination.js";
 import withTransaction from "../../middleware/transactions/withTransaction.js";
+import { TrainSchema } from "../../models/index.js";
 
 
 class TrainRepository extends BaseRepository {
@@ -13,166 +14,105 @@ class TrainRepository extends BaseRepository {
     }
 
     async createTrain(payload, session) {
-        const { level, term, course_name, course_code, batch_ref, semester_ref, department_ref } = payload;
-
-        // Use the provided session for all database operations within the transaction
-        const savedTrains = [];
-        for (let i = 0; i < course_name.length; i++) {
-            const course = new this.#model({
-                level: level,
-                term: term,
-                course_name: course_name[i],
-                course_code: course_code[i],
-                batch_ref: batch_ref,
-                semester_ref: semester_ref,
-                department_ref: department_ref
-            });
-
-            // Save the course to the database within the session
-            const savedTrain = await course.save({ session });
-            console.log("Train created successfully:", savedTrain);
-            savedTrains.push(savedTrain);
-        }
-
-        return savedTrains;
-
-    }
-
-    async updateTrain(courseId, updatePayload) {
-        const { level, term, course_name, course_code, batch_ref, semester_ref, department_ref } = payload;
-
-
-        const savedTrains = [];
-
-        // Iterate over the course_name array
-        for (let i = 0; i < course_name.length; i++) {
-            const course = new this.#model({
-                level: level,
-                term: term,
-                course_name: course_name[i],
-                course_code: course_code[i],
-                batch: batch
-            });
-
-            const savedTrainPromise = course.save({ session });
-            savedTrains.push(savedTrainPromise);
-        }
-
-        const savedTrainsResults = await Promise.all(savedTrains);
-
-        const updatePromises = [];
-
-        for (let i = 0; i < update_ids.length; i++) {
-            const courseId = update_ids[i];
-            const updatePayload = {
-                course_name: update_course_name[i],
-                course_code: update_course_code[i]
-                // Add other fields to update if needed
+        const { name,number,station,fareRatePerStop } = payload;
+        console.log('payload',payload);
+        const stops = [];
+        const stations = JSON.parse(station);
+        for (const station of stations) {
+            const stop = {
+                station: station.id,
+                order: stations.indexOf(station) + 1
             };
-
-            const updatePromise = this.#model.TrainUpdate(courseId, updatePayload)
-                .then(updatedTrain => {
-                    console.log(`Train with ID ${courseId} updated successfully:`, updatedTrain);
-                })
-                .catch(error => {
-                    console.error(`Error updating course with ID ${courseId}:`, error);
-                });
-            updatePromises.push(updatePromise);
+            stops.push(stop);  
         }
 
-        Promise.all(updatePromises)
-            .then(() => {
-                console.log('All update operations completed successfully');
-            })
-            .catch(error => {
-                console.error('Error executing update operations:', error);
-            });
+        console.log('stops',stops);
+        const train = new this.#model({
+            name: name,
+            number: number,
+            stops: stops,
+            fareRatePerStop: fareRatePerStop,
+            // daysOfOperation: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        });
+        const savedTrain = await train.save({ session });
+        return savedTrain;
     }
 
-    async deleteTrain(courseId) {
-        // Your delete logic here
+    async updateTrain(payload , id) {
+        const { name,number,station,fareRatePerStop } = payload;
+        console.log('payload',payload);
+        const stops = [];
+        const stations = JSON.parse(station);
+        for (const station of stations) {
+            const stop = {
+                station: station.id,
+                order: stations.indexOf(station) + 1
+            };
+            stops.push(stop);  
+        }
+    }
+
+    async deleteTrain(id) {
         try {
-            const deletedTrain = await this.#model.findByIdAndDelete(courseId);
+            const deletedTrain = await this.#model.findByIdAndDelete(id);
             if (!deletedTrain) {
                 throw new Error('Train not found');
             }
             console.log('Train deleted successfully:', deletedTrain);
             return deletedTrain;
         } catch (error) {
-            console.error('Error deleting course:', error);
+            console.error('Error deleting train:', error);
             throw error;
         }
     }
 
-    async getSingleTrain(courseId) {
-        // Your find single course logic here
+    async getSingleTrain(id) {
         try {
-            const foundTrain = await this.#model.findById(courseId)
-                .populate('batch_ref');
+            const foundTrain = await this.#model.findById(id)
+                // .populate('batch_ref');
             if (!foundTrain) {
                 throw new Error('Train not found');
             }
             return foundTrain;
         } catch (error) {
-            console.error('Error finding course:', error);
+            console.error('Error finding train:', error);
             throw error;
         }
     }
 
-    async getAllTrain(query) {
-
-        const { semester_ref, department_ref } = query;
+    async getAllTrainPagination(query) {
         try {
-            const course = await pagination(query, async (limit, offset, sortOrder) => {
-                const coursesPromise = this.#model.find({
-                    semester_ref: semester_ref,
-                    department_ref: department_ref
-                })
-                    .sort({ level: 1, term: 1, 'batch_ref.batch': 1 }) // Sort by level, term, and batch_ref's batch
+            const train = await pagination(query, async (limit, offset, sortOrder) => {
+                const trainPromise = this.#model.find({})
+                    .sort({ }) 
                     .skip(offset)
                     .limit(limit)
-                    .populate('batch_ref')
+                    // .populate('batch_ref')
                     .exec();
+                  
                 const totalTrainsPromise = this.#model.estimatedDocumentCount().exec();
-
-                const [courses, totalTrains] = await Promise.all([coursesPromise, totalTrainsPromise]);
-
-                return { doc: courses, totalDoc: totalTrains };
+                const [train, totalTrains] = await Promise.all([trainPromise, totalTrainsPromise]);
+                return { doc: train, totalDoc: totalTrains };
             });
-            return course;
+            return train;
         } catch (error) {
-            console.error('Error finding all courses:', error);
+            console.error('Error finding all train:', error);
             throw error;
         }
         // });
     }
 
-    async getAllActiveTrain(payload) {
-        const { semester_ref, department_ref } = payload;
-        const course = this.#model.find({
-            semester_ref: semester_ref,
-            department_ref: department_ref,
+    async getAllTrain() {
+        const train = this.#model.find({
         })
-            .sort({ level: 1, term: 1, 'batch_ref.batch': 1 })
-            .populate('batch_ref')
+            .sort({  })
+            // .populate('batch_ref')
             .exec();
-        return course;
+        return train;
 
     }
-    async getNotUseActiveTrain(payload) {
-        const { semester_ref, department_ref } = payload;
-        const course = this.#model.find({
-            subject_flag:0,
-            semester_ref: semester_ref,
-            department_ref: department_ref,
-        })
-            .sort({ level: 1, term: 1, 'batch_ref.batch': 1 })
-            .populate('batch_ref')
-            .exec();
-        return course;
 
-    }
 
 }
 
-export default new TrainRepository();
+export default new TrainRepository(TrainSchema);

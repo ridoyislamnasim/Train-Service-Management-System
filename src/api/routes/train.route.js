@@ -4,13 +4,12 @@ import controller from '../../modules/Train/Train.controller.js';
 import jwtAuth from '../../middleware/auth/jwtAuth.js';
 
 const TrainRouter = Router();
-TrainRouter.use(jwtAuth('administrator', 'co-administrator'));
+TrainRouter.use(jwtAuth('user'));
 
 TrainRouter
-  .post('/', controller.createTrain)
-  .get('/', controller.getAllTrain)
-  .get('/active', controller.getAllActiveTrain)
-  .get('/routine', controller.getNotUseActiveTrain);
+  .post('/', upload.any(), controller.createTrain)
+  .get('/', controller.getAllTrainPagination)
+  .get('/all', controller.getAllTrain)
 
 TrainRouter
   .route('/:id')

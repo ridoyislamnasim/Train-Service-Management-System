@@ -19,8 +19,6 @@ class TicketService extends BaseService {
 		this.#repository = repository;
 	}
 	async createTicket(payload, session) {
-    const {semester_ref} = payload;
-    if (!semester_ref) throw new NotFoundError('semester must be defined');
 		const course = await this.#repository.createTicket(payload, session);
 		return course;
 	}

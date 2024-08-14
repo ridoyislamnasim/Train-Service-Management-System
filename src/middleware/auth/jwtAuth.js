@@ -22,9 +22,8 @@ return async (req, res, next) => {
           if (!role.includes(payload.userInfo.user_info_encrypted.role)) {
         throw new BadRequestError('unauthorized');
       }
-     const semester = await SemesterSchema.findOne({status: true})
     req.user = { ...payload.userInfo.user_info_encrypted };
-    req.semester = { ...semester?._doc };
+
     next();
   } catch (err) {
     next(err);

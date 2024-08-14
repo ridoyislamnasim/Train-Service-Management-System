@@ -60,12 +60,11 @@ class StationRepository extends BaseRepository {
         return station;
     }
 
-    async getSingleStation(stationId) {
+    async getSingleStation(id) {
         try {
-            const foundStation = await this.#model.findById(stationId);
-            if (!foundStation) {
-                throw new Error('Station not found');
-            }
+            const foundStation = await this.#model.findById(id);
+            console.log('foundStation',foundStation);
+            if (!foundStation) throw new NotFoundError('Station not found');
             return foundStation;
         } catch (error) {
             console.error('Error finding station:', error);

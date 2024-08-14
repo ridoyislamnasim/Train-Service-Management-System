@@ -5,14 +5,14 @@ import courseService from "./ticket.service.js";
 
 class TicketController {
     createTicket = withTransaction(async(req,res,next, session)=>{
+        const userID = req?.user?.id
         const payload = {
-            level:req.body?.level,
-            term:req.body?.term,
-            course_name:req.body?.course_name,
-            course_code:req.body?.course_code,
-            batch_ref:req.body?.batch_ref,
-            semester_ref: req.semester?._id,
-            department_ref: req.user?.department_ref[0],
+            user:userID,
+            train:req.body?.train,
+            startStation:req.body?.startStation,
+            endStation:req.body?.endStation,
+            seatNumber:req.body?.seatNumber,
+            journeyDate: req.body?.journeyDate,
         }
 
         const course = await courseService.createTicket(payload, session);

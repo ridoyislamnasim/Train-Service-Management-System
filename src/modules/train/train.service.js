@@ -19,27 +19,23 @@ class TrainService extends BaseService {
 		this.#repository = repository;
 	}
 	async createTrain(payload, session) {
-    const {semester_ref} = payload;
-    if (!semester_ref) throw new NotFoundError('semester must be defined');
-		const course = await this.#repository.createTrain(payload, session);
-		return course;
+		const train = await this.#repository.createTrain(payload, session);
+		return train;
 	}
-	async getAllTrain(query) {
-		const course = await this.#repository.getAllTrain(query);
-		return course;
+	async getAllTrainPagination(query) {
+		const train = await this.#repository.getAllTrainPagination(query);
+		return train;
+
 	}
-  async getAllActiveTrain(payload) {
-		const course = await this.#repository.getAllActiveTrain(payload);
-		return course;
+  async getAllTrain() {
+		const train = await this.#repository.getAllTrain();
+		return train;
 	}
-  async getNotUseActiveTrain(payload) {
-		const course = await this.#repository.getNotUseActiveTrain(payload);
-		return course;
-	}
+
 	async getSingleTrain(id) {
-        const course = await this.#repository.getSingleTrain(id);
-        if (!course) throw new NotFoundError(`Train not found by id`);
-        return course;
+        const train = await this.#repository.getSingleTrain(id);
+        if (!train) throw new NotFoundError(`Train not found by id`);
+        return train;
     }
 	
 	async updateTrain(payload , id) {
@@ -48,9 +44,9 @@ class TrainService extends BaseService {
 	}
 
     async deleteTrain(id) {
-        const course = await this.#repository.deleteTrain(id);
-        if (!course) throw new NotFoundError(`Train not found by id`);
-        return course;
+        const train = await this.#repository.deleteTrain(id);
+        if (!train) throw new NotFoundError(`Train not found by id`);
+        return train;
     }
 
     async updateTrainStatus(riderId, query) {
@@ -65,4 +61,4 @@ class TrainService extends BaseService {
 
 }
 
-export default new TrainService(TrainRepository, 'course');
+export default new TrainService(TrainRepository, 'train');

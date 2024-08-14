@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import BaseRepository from "../base/base.repository.js";
 import pagination from "../../utils/pagination.js";
 import withTransaction from "../../middleware/transactions/withTransaction.js";
+import { TicketSchema } from "../../models/index.js";
 
 
 class TicketRepository extends BaseRepository {
@@ -13,28 +14,22 @@ class TicketRepository extends BaseRepository {
     }
 
     async createTicket(payload, session) {
-        const { level, term, course_name, course_code, batch_ref, semester_ref, department_ref } = payload;
+        const { user,train,
+            startStation,endStation,
+            seatNumber,journeyDate } = payload;
+            console.log('journeyDate',journeyDate);
 
-        // Use the provided session for all database operations within the transaction
-        const savedTickets = [];
-        for (let i = 0; i < course_name.length; i++) {
-            const course = new this.#model({
-                level: level,
-                term: term,
-                course_name: course_name[i],
-                course_code: course_code[i],
-                batch_ref: batch_ref,
-                semester_ref: semester_ref,
-                department_ref: department_ref
-            });
-
-            // Save the course to the database within the session
-            const savedTicket = await course.save({ session });
-            console.log("Ticket created successfully:", savedTicket);
-            savedTickets.push(savedTicket);
-        }
-
-        return savedTickets;
+        const ticket = new this.#model({
+            user: user,
+            train: train,
+            startStation: startStation,
+            endStation: endStation,
+            seatNumber: seatNumber,
+            journeyDate: new Date(journeyDate),
+            fare: 0,
+        });
+        const savedTicket = await ticket.save({ session });
+        return savedTicket;
 
     }
 
@@ -108,7 +103,7 @@ class TicketRepository extends BaseRepository {
         // Your find single course logic here
         try {
             const foundTicket = await this.#model.findById(courseId)
-                .populate('batch_ref');
+                // .populate('batch_ref');
             if (!foundTicket) {
                 throw new Error('Ticket not found');
             }
@@ -175,4 +170,4 @@ class TicketRepository extends BaseRepository {
 
 }
 
-export default new TicketRepository();
+export default new TicketRepository(TicketSchema);
