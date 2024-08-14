@@ -4,6 +4,5 @@ build
 logs
 *.log
 npm-debug.log*
-uploads/
 .env
 dump.rdb
