@@ -24,17 +24,15 @@ const trainSchema = new mongoose.Schema({
         departureTime: {
           type: Date,
           required: true
-        }
+        },
+        // order
       }
     ],
+    // fareRatePerStop
     daysOfOperation: {
-      type: [String], // e.g., ['Monday', 'Tuesday']
+      type: [String], 
       required: true
     },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
   }, { timestamps: true });
   
   export const TrainSchema = mongoose.model('Train', trainSchema);

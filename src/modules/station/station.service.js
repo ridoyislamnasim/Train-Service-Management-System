@@ -19,50 +19,36 @@ class StationService extends BaseService {
 		this.#repository = repository;
 	}
 	async createStation(payload, session) {
-    const {semester_ref} = payload;
-    if (!semester_ref) throw new NotFoundError('semester must be defined');
-		const course = await this.#repository.createStation(payload, session);
-		return course;
+    const {name, city, state} = payload;
+    if (!name) throw new NotFoundError('station name must be defined');
+		const station = await this.#repository.createStation(payload, session);
+		return station;
 	}
-	async getAllStation(query) {
-		const course = await this.#repository.getAllStation(query);
-		return course;
+	async getAllStationPagination(query) {
+		const station = await this.#repository.getAllStationPagination(query);
+		return station;
 	}
-  async getAllActiveStation(payload) {
-		const course = await this.#repository.getAllActiveStation(payload);
-		return course;
+  async getAllStation(payload) {
+    const station = await this.#repository.getAllStation(payload);
+		return station;
 	}
-  async getNotUseActiveStation(payload) {
-		const course = await this.#repository.getNotUseActiveStation(payload);
-		return course;
-	}
-	async getSingleStation(id) {
-        const course = await this.#repository.getSingleStation(id);
-        if (!course) throw new NotFoundError(`Station not found by id`);
-        return course;
-    }
-	
-	async updateStation(payload , id) {
-		const merchant = await this.#repository.updateStation(payload,id);
-		return merchant;
-	}
-
+  async getSingleStation(id) {
+    const station = await this.#repository.getSingleStation(id);
+    if (!station) throw new NotFoundError(`Station not found by id`);
+    return station;
+}
+async updateStation(payload , id) {
+  const merchant = await this.#repository.updateStation(payload,id);
+  return merchant;
+}
     async deleteStation(id) {
-        const course = await this.#repository.deleteStation(id);
-        if (!course) throw new NotFoundError(`Station not found by id`);
-        return course;
+        const station = await this.#repository.deleteStation(id);
+        if (!station) throw new NotFoundError(`Station not found by id`);
+        return station;
     }
 
-    async updateStationStatus(riderId, query) {
-        let riderObj = {};
-        if (query?.status) {
-          riderObj.status = parseInt(query?.status);
-        }
-        const riderUpdate = await this.#repository.updateById(riderId, riderObj);
-        if (riderUpdate[0] <= 0) throw new NotFoundError('Station Id not found');
-        return riderUpdate;
-    }
+
 
 }
 
-export default new StationService(StationRepository, 'course');
+export default new StationService(StationRepository, 'station');

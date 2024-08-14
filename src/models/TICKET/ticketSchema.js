@@ -10,6 +10,16 @@ const ticketSchema = new mongoose.Schema({
       ref: 'Train',
       required: true
     },
+    startStation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Station',
+      required: true
+    },
+    endStation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Station',
+      required: true
+    },
     seatNumber: {
       type: String,
       required: true
@@ -18,6 +28,8 @@ const ticketSchema = new mongoose.Schema({
       type: Date,
       required: true
     },
+    // price: 
+
     fare: {
       type: Number,
       required: true

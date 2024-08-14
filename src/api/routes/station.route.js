@@ -4,18 +4,16 @@ import { upload } from '../../middleware/upload/upload.js';
 
 const StationRouter = Router();
 StationRouter
-  .post('/',  upload.any(), controller.createStation)
+  .post('/', controller.createStation)
   .get('/', controller.getAllStationPagination)
   .get('/all', controller.getAllStation);
 
 StationRouter
   .route('/:id')
   .get(controller.getSingleStation)
-  .put(upload.any(),controller.updateStation)
+  .put(controller.updateStation)
   .delete(controller.deleteStation);
 
-  StationRouter
-  .put('/status/:id', controller.updateStationStatus)
 
 
 export default StationRouter;
