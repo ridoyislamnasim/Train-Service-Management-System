@@ -10,16 +10,10 @@ UserRouter
   .post('/registration',upload.any(), controller.registrationUser)
   .post('/login', controller.loginUser)
   .get('/', controller.getAllUserPagination)
-//   .get('/active', controller.getAllActiveUser)
-//   .get('/routine', controller.getNotUseActiveUser);
 
 UserRouter
   .route('/:id')
   .get(controller.getSingleUser)
-//   .put(upload.any(), controller.updateUser) //not implemented yet
-//   .delete(controller.deleteUser);
 
-//   UserRouter
-//   .put('/:id/status', controller.updateUserStatus)
 
 export default UserRouter;

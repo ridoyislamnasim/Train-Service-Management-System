@@ -58,48 +58,11 @@ class UserService extends BaseService {
 		return user;
 	}
 
-    async getAllUser(session) {
-		const user = await this.#repository.getAllUser( session);
-		return user;
-	}
-
 	async getSingleUser(id) {
         const user = await this.#repository.getSingleUser(id);
         if (!user) throw new NotFoundError(` user not found by id`);
         return user;
     }
-
-	async deleteUser(id) {
-        const user = await this.#repository.deleteUser(id);
-        if (!user) throw new NotFoundError(` user not found by id`);
-        return user;
-    }
-
-	async updateUser(payload,id , session) {
-        const { user } = payload;
-		
-		console.log(payload)// botn are required
-		if (!user) {
-            throw new NotFoundError('fill up required fields');
-        }
-
-        // check if user_id is already exist without this user
-        const isUserIdExist = await this.#repository.isUserExistWithoutThisId(user, id);
-        if (isUserIdExist) {
-            throw new NotFoundError('user already exist');
-        }
-
-
-		const userResult = await this.#repository.updateUser(payload,id , session);
-    if (!userResult) throw new NotFoundError(` user not found by id`);
-		return userResult;
-	}
-
-	async updateUserStatus( payload, id ) {
-        const userStatusUpdate = await this.#repository.updateUserStatus(payload,id);
-        if (!userStatusUpdate) throw new NotFoundError(` user not found by id`);
-        return userStatusUpdate;
-      }
 }
 
 export default new UserService(userRepository, 'user');

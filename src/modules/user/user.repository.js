@@ -47,6 +47,7 @@ class UserRepository extends BaseRepository {
 
   async getSingleUser(id) {
     const user = await this.#model.findById(id)
+    .populate('tickets')
     return user;
   }
 
@@ -58,6 +59,7 @@ class UserRepository extends BaseRepository {
           .sort({ createdAt: sortOrder })
           .skip(offset)
           .limit(limit)
+          .populate('tickets')
         // Count total documents
         const totalUsers = await UserSchema.countDocuments();
 
@@ -71,62 +73,6 @@ class UserRepository extends BaseRepository {
     }
   }
 
-  async getAllUser(session) {
-    const user = await UserSchema.find({ status: true })
-    return user;
-  }
-
-
-  async updateUser(payload, id, session) {
-    const { batch } = payload;
-    let updateObj = {
-      batch: batch,
-    };
-
-    const updatedUser = await this.#model.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          ...updateObj,
-        }
-      },
-      {
-        // session, 
-        new: true
-      }
-    );
-
-    return updatedUser;
-
-  }
-
-  async updateUserStatus(payload, id) {
-
-    const { status } = payload;
-    console.log("status", status);
-    console.log("status", typeof status);
-    const updateUserStatus = await this.#model.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          status: status,
-        }
-      },
-    );
-
-    return updateUserStatus;
-
-  }
-
-  async deleteUser(id) {
-    const batch = await this.#model.findByIdAndDelete(id);;
-
-    if (!batch) {
-      throw new Error(`User with ID ${id} not found.`);
-    }
-    return { message: `User with ID ${id} successfully deleted.` };
-
-  }
 
 }
 

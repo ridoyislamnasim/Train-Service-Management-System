@@ -39,12 +39,6 @@ class UserController {
     res.status(resDoc.statusCode).json(resDoc);
   });
 
-  getAllUser = withTransaction(async (req, res, next, session) => {
-    const batch = await UserService.getAllUser(session);
-    const resDoc = responseHandler(200, 'User get successfully', batch);
-    res.status(resDoc.statusCode).json(resDoc);
-  });
-
   getSingleUser = catchError(async (req, res, next) => {
     const { id } = req.params;
     const batch = await UserService.getSingleUser(id);
@@ -52,35 +46,7 @@ class UserController {
     res.status(resDoc.statusCode).json(resDoc);
   });
 
-  updateUser = withTransaction(async (req, res, next, session) => {
-    const { id } = req.params;
-    const { batch } = req.body;
 
-    const payload = {
-      batch
-    };
-
-    const batchResult = await UserService.updateUser(payload, id, session);
-    const resDoc = responseHandler(200, 'User update successfully', batchResult);
-    return res.status(201).json(resDoc);
-  });
-
-  deleteUser = catchError(async (req, res, next) => {
-    const { id } = req.params;
-    const batch = await UserService.deleteUser(id);
-    const resDoc = responseHandler(200, 'batch delete successfully');
-    res.status(resDoc.statusCode).json(resDoc);
-  });
-
-  updateUserStatus = catchError(async (req, res, next) => {
-    const { id } = req.params;
-    const payload = {
-      status: req.query?.status,
-    };
-    await UserService.updateUserStatus(payload, id);
-    const resDoc = responseHandler(200, 'User Update Status successfully');
-    res.status(resDoc.statusCode).json(resDoc);
-  });
 }
 
 export default new UserController();
