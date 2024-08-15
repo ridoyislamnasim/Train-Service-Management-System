@@ -16,7 +16,7 @@ class StationRepository extends BaseRepository {
 
     async createStation(payload, session) {
         const { name, state, city } = payload;
-        // chek this name already exit 
+        if (!name ||!city ||!state) throw new Error('Name, city and state are required'); 
         const checkStation = await this.#model.findOne({ name });
         console.log('checkStation',checkStation);
         if (checkStation) throw new NotFoundError('Station already exist');
@@ -75,6 +75,7 @@ class StationRepository extends BaseRepository {
 
     async updateStation(payload, id) {
         const { name, city,state} = payload;
+        if (!name ||!city ||!state) throw new Error('Name, city and state are required');
         const foundStation = await this.#model.findById(id);
         if (!foundStation) throw new NotFoundError('Station not found');
         const updatedStation = await this.#model.findByIdAndUpdate(id, {

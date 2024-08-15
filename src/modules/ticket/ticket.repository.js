@@ -18,6 +18,8 @@ class TicketRepository extends BaseRepository {
         const { user, train,
             startStation, endStation,
             seatNumber, journeyDate } = payload;
+        if (!user ||!train ||!startStation ||!endStation ||!seatNumber ||!journeyDate) throw new NotFoundError('User, train, startStation, endStation, seatNumber, journeyDate are required');
+
 
         const trainExists = await TrainSchema.findById(train);
         if (!trainExists) throw new NotFoundError('Train not found');
@@ -72,38 +74,31 @@ class TicketRepository extends BaseRepository {
 
     async updateTicket(payload,id) {
         const { startStation, endStation, seatNumber, journeyDate } = payload;
+        if (!user ||!train ||!startStation ||!endStation ||!seatNumber ||!journeyDate) throw new NotFoundError('User, train, startStation, endStation, seatNumber, journeyDate are required');
 
-        // Find the existing ticket and ensure it belongs to the user
         const ticket = await this.#model.findOne({ _id: id, user: user });
         if (!ticket) throw new NotFoundError('Ticket not found');
 
-        // Fetch the train details
         const train = await TrainSchema.findById(ticket.train);
         if (!train) throw new NotFoundError('Train not found');
 
-        // Validate the new start and end stations
         const startStationId = new mongoose.Types.ObjectId(startStation);
         const endStationId = new mongoose.Types.ObjectId(endStation);
         const startStop = train.stops.find(stop => stop.station.equals(startStationId));
         const endStop = train.stops.find(stop => stop.station.equals(endStationId));
         if (!startStop || !endStop) throw new NotFoundError("StartStop and EndStop not found");
 
-        // Calculate the new fare
         const startIndex = startStop.order;
         const endIndex = endStop.order;
         const numberOfStops = Math.abs(endIndex - startIndex);
         const newFare = numberOfStops * train.fareRatePerStop;
 
-        // Determine the fare difference
         const fareDifference = newFare - ticket.fare;
 
-        // Update the user's wallet if needed
         if (fareDifference !== 0) {
-            // Determine transaction type and amount
             const transactionType = fareDifference > 0 ? 'debit' : 'credit';
             const transactionAmount = Math.abs(fareDifference);
         
-            // If it's a debit, ensure the user has enough balance
             if (transactionType === 'debit') {
                 const userInfo = await UserSchema.findById(userId);
                 if (userInfo.wallet.balance < transactionAmount) {
@@ -111,7 +106,6 @@ class TicketRepository extends BaseRepository {
                 }
             }
         
-            // Update wallet balance and add transaction record
             await UserSchema.findByIdAndUpdate(userId, {
                 $inc: { 'wallet.balance': transactionType === 'debit' ? -transactionAmount : transactionAmount },
                 $push: {
@@ -124,7 +118,6 @@ class TicketRepository extends BaseRepository {
             }, { session });
         }
 
-        // Update the ticket details
         const updatedTicket = await this.#model.findByIdAndUpdate(id, {
             startStation: startStationId,
             endStation: endStationId,
@@ -168,7 +161,12 @@ class TicketRepository extends BaseRepository {
     async getSingleTicket(id) {
         try {
             const foundTicket = await this.#model.findById(id)
-            // .populate('');
+            .populate('user')
+            .populate('train')
+            .populate({
+                path: 'startStation endStation', 
+                select: 'name'
+            });
             if (!foundTicket) {
                 throw new Error('Ticket not found');
             }
@@ -186,7 +184,12 @@ class TicketRepository extends BaseRepository {
                     .sort({  }) 
                     .skip(offset)
                     .limit(limit)
-                    // .populate('')
+                    .populate('user')
+                    .populate('train')
+                    .populate({
+                        path: 'startStation endStation', 
+                        select: 'name'
+                    })
                     .exec();
                 const totalTicketsPromise = this.#model.estimatedDocumentCount().exec();
 

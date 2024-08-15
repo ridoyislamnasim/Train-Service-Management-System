@@ -16,7 +16,7 @@ class TrainRepository extends BaseRepository {
 
     async createTrain(payload, session) {
         const { name,number,station,fareRatePerStop } = payload;
-        // name or number allrady exits 
+        if (!name ||!number || !station || !fareRatePerStop) throw new NotFoundError("Name, number, station and fareRatePerStop are required");
         const trainExists = await this.#model.exists({ $or: [{ name: name }, { number: number }] });
         if (trainExists) throw new NotFoundError("Train already exists");
 
@@ -45,6 +45,7 @@ class TrainRepository extends BaseRepository {
 
     async updateTrain(payload , id) {
         const { name, number, station, fareRatePerStop } = payload;
+        if (!name ||!number || !station || !fareRatePerStop) throw new NotFoundError("Name, number, station and fareRatePerStop are required");
         const trainExists = await this.#model.exists({ _id: id });
         if (!trainExists) throw new NotFoundError("Train not found");
         const conflictingTrain = await this.#model.findOne({
@@ -95,7 +96,7 @@ class TrainRepository extends BaseRepository {
     async getSingleTrain(id) {
         try {
             const foundTrain = await this.#model.findById(id)
-                // .populate('batch_ref');
+                .populate('stops.station');
             if (!foundTrain) {
                 throw new Error('Train not found');
             }
@@ -113,7 +114,7 @@ class TrainRepository extends BaseRepository {
                     .sort({ }) 
                     .skip(offset)
                     .limit(limit)
-                    // .populate('batch_ref')
+                    .populate('stops.station')
                     .exec();
                   
                 const totalTrainsPromise = this.#model.estimatedDocumentCount().exec();
@@ -125,14 +126,13 @@ class TrainRepository extends BaseRepository {
             console.error('Error finding all train:', error);
             throw error;
         }
-        // });
     }
 
     async getAllTrain() {
         const train = this.#model.find({
         })
             .sort({  })
-            // .populate('batch_ref')
+            .populate('stops.station')
             .exec();
         return train;
 
