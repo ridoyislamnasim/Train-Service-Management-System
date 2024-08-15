@@ -19,36 +19,30 @@ class TicketService extends BaseService {
 		this.#repository = repository;
 	}
 	async createTicket(payload, session) {
-		const course = await this.#repository.createTicket(payload, session);
-		return course;
+		const ticket = await this.#repository.createTicket(payload, session);
+		return ticket;
 	}
 	async getAllTicket(query) {
-		const course = await this.#repository.getAllTicket(query);
-		return course;
+		const ticket = await this.#repository.getAllTicket(query);
+		return ticket;
 	}
-  async getAllActiveTicket(payload) {
-		const course = await this.#repository.getAllActiveTicket(payload);
-		return course;
-	}
-  async getNotUseActiveTicket(payload) {
-		const course = await this.#repository.getNotUseActiveTicket(payload);
-		return course;
-	}
+
+
 	async getSingleTicket(id) {
-        const course = await this.#repository.getSingleTicket(id);
-        if (!course) throw new NotFoundError(`Ticket not found by id`);
-        return course;
+        const ticket = await this.#repository.getSingleTicket(id);
+        if (!ticket) throw new NotFoundError(`Ticket not found by id`);
+        return ticket;
     }
 	
 	async updateTicket(payload , id) {
-		const merchant = await this.#repository.updateTicket(payload,id);
-		return merchant;
+		const ticket = await this.#repository.updateTicket(payload,id);
+		return ticket;
 	}
 
-    async deleteTicket(id) {
-        const course = await this.#repository.deleteTicket(id);
-        if (!course) throw new NotFoundError(`Ticket not found by id`);
-        return course;
+    async cancleTicket(session,id) {
+        const ticket = await this.#repository.cancleTicket(session,id);
+        if (!ticket) throw new NotFoundError(`Ticket not found by id`);
+        return ticket;
     }
 
     async updateTicketStatus(riderId, query) {
@@ -63,4 +57,4 @@ class TicketService extends BaseService {
 
 }
 
-export default new TicketService(TicketRepository, 'course');
+export default new TicketService(TicketRepository, 'ticket');

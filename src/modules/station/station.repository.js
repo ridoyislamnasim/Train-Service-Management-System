@@ -75,7 +75,6 @@ class StationRepository extends BaseRepository {
 
     async updateStation(payload, id) {
         const { name, city,state} = payload;
-        // id not found send not found this it 
         const foundStation = await this.#model.findById(id);
         if (!foundStation) throw new NotFoundError('Station not found');
         const updatedStation = await this.#model.findByIdAndUpdate(id, {

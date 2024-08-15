@@ -46,34 +46,34 @@ class UserRepository extends BaseRepository {
   }
 
   async getSingleUser(id) {
-    const batchs = await this.#model.findById(id)
-    return batchs;
+    const user = await this.#model.findById(id)
+    return user;
   }
 
 
   async getAllUserPagination(payload, session) {
     try {
-      const batchs = await pagination(payload, async (limit, offset, sortOrder) => {
-        const batchs = await UserSchema.find()
+      const user = await pagination(payload, async (limit, offset, sortOrder) => {
+        const user = await UserSchema.find()
           .sort({ createdAt: sortOrder })
           .skip(offset)
           .limit(limit)
         // Count total documents
         const totalUsers = await UserSchema.countDocuments();
 
-        return { doc: batchs, totalDoc: totalUsers };
+        return { doc: user, totalDoc: totalUsers };
       });
 
-      return batchs;
+      return user;
     } catch (error) {
-      console.error("Error getting batchs with pagination:", error);
+      console.error("Error getting user with pagination:", error);
       throw error;
     }
   }
 
   async getAllUser(session) {
-    const batchs = await UserSchema.find({ status: true })
-    return batchs;
+    const user = await UserSchema.find({ status: true })
+    return user;
   }
 
 

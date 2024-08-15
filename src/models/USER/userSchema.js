@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
         },
         type: {
           type: String,
-          enum: ['credit', 'debit'],
+          enum: ['credit', 'debit', 'refund'],
           required: true
         }
       }

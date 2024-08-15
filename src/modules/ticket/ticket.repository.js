@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import BaseRepository from "../base/base.repository.js";
 import pagination from "../../utils/pagination.js";
 import withTransaction from "../../middleware/transactions/withTransaction.js";
-import { TicketSchema } from "../../models/index.js";
+import { TicketSchema, TrainSchema, UserSchema } from "../../models/index.js";
+import { NotFoundError } from "../../utils/errors.js";
 
 
 class TicketRepository extends BaseRepository {
@@ -14,10 +15,39 @@ class TicketRepository extends BaseRepository {
     }
 
     async createTicket(payload, session) {
-        const { user,train,
-            startStation,endStation,
-            seatNumber,journeyDate } = payload;
-            console.log('journeyDate',journeyDate);
+        const { user, train,
+            startStation, endStation,
+            seatNumber, journeyDate } = payload;
+
+        const trainExists = await TrainSchema.findById(train);
+        if (!trainExists) throw new NotFoundError('Train not found');
+
+        const startStationId = new mongoose.Types.ObjectId(startStation);
+        const endStationId = new mongoose.Types.ObjectId(endStation);
+        const startStop = trainExists.stops.find(stop => stop.station.equals(startStationId));
+        const endStop = trainExists.stops.find(stop => stop.station.equals(endStationId) );
+        if (!startStop || !endStop) throw new NotFoundError("StartStop and EndStop not found");
+
+
+        const startIndex = startStop.order;
+        const endIndex = endStop.order;
+        const numberOfStops = Math.abs(endIndex - startIndex);
+        const fare = numberOfStops * trainExists.fareRatePerStop;
+
+        const userInfo = await UserSchema.findOne({ _id:user });
+        const wallet = userInfo.wallet
+        if (wallet.balance < fare) throw new NotFoundError('Insufficient balance');
+
+        await UserSchema.findByIdAndUpdate(user, {
+            $inc: { 'wallet.balance': -fare },
+            $push: {
+                'wallet.transactions': {
+                    amount: fare,
+                    type: 'debit',
+                    date: new Date()
+                }
+            }
+        }, { session });
 
         const ticket = new this.#model({
             user: user,
@@ -26,147 +56,153 @@ class TicketRepository extends BaseRepository {
             endStation: endStation,
             seatNumber: seatNumber,
             journeyDate: new Date(journeyDate),
-            fare: 0,
+            fare: fare,
         });
         const savedTicket = await ticket.save({ session });
+
+        await UserSchema.findByIdAndUpdate(user, {
+            $push: {
+                'tickets': savedTicket._id
+            }
+        }, { session });
+
         return savedTicket;
 
     }
 
-    async updateTicket(courseId, updatePayload) {
-        const { level, term, course_name, course_code, batch_ref, semester_ref, department_ref } = payload;
+    async updateTicket(payload,id) {
+        const { startStation, endStation, seatNumber, journeyDate } = payload;
 
+        // Find the existing ticket and ensure it belongs to the user
+        const ticket = await this.#model.findOne({ _id: id, user: user });
+        if (!ticket) throw new NotFoundError('Ticket not found');
 
-        const savedTickets = [];
+        // Fetch the train details
+        const train = await TrainSchema.findById(ticket.train);
+        if (!train) throw new NotFoundError('Train not found');
 
-        // Iterate over the course_name array
-        for (let i = 0; i < course_name.length; i++) {
-            const course = new this.#model({
-                level: level,
-                term: term,
-                course_name: course_name[i],
-                course_code: course_code[i],
-                batch: batch
-            });
+        // Validate the new start and end stations
+        const startStationId = new mongoose.Types.ObjectId(startStation);
+        const endStationId = new mongoose.Types.ObjectId(endStation);
+        const startStop = train.stops.find(stop => stop.station.equals(startStationId));
+        const endStop = train.stops.find(stop => stop.station.equals(endStationId));
+        if (!startStop || !endStop) throw new NotFoundError("StartStop and EndStop not found");
 
-            const savedTicketPromise = course.save({ session });
-            savedTickets.push(savedTicketPromise);
-        }
+        // Calculate the new fare
+        const startIndex = startStop.order;
+        const endIndex = endStop.order;
+        const numberOfStops = Math.abs(endIndex - startIndex);
+        const newFare = numberOfStops * train.fareRatePerStop;
 
-        const savedTicketsResults = await Promise.all(savedTickets);
+        // Determine the fare difference
+        const fareDifference = newFare - ticket.fare;
 
-        const updatePromises = [];
-
-        for (let i = 0; i < update_ids.length; i++) {
-            const courseId = update_ids[i];
-            const updatePayload = {
-                course_name: update_course_name[i],
-                course_code: update_course_code[i]
-                // Add other fields to update if needed
-            };
-
-            const updatePromise = this.#model.TicketUpdate(courseId, updatePayload)
-                .then(updatedTicket => {
-                    console.log(`Ticket with ID ${courseId} updated successfully:`, updatedTicket);
-                })
-                .catch(error => {
-                    console.error(`Error updating course with ID ${courseId}:`, error);
-                });
-            updatePromises.push(updatePromise);
-        }
-
-        Promise.all(updatePromises)
-            .then(() => {
-                console.log('All update operations completed successfully');
-            })
-            .catch(error => {
-                console.error('Error executing update operations:', error);
-            });
-    }
-
-    async deleteTicket(courseId) {
-        // Your delete logic here
-        try {
-            const deletedTicket = await this.#model.findByIdAndDelete(courseId);
-            if (!deletedTicket) {
-                throw new Error('Ticket not found');
+        // Update the user's wallet if needed
+        if (fareDifference !== 0) {
+            // Determine transaction type and amount
+            const transactionType = fareDifference > 0 ? 'debit' : 'credit';
+            const transactionAmount = Math.abs(fareDifference);
+        
+            // If it's a debit, ensure the user has enough balance
+            if (transactionType === 'debit') {
+                const userInfo = await UserSchema.findById(userId);
+                if (userInfo.wallet.balance < transactionAmount) {
+                    throw new Error('Insufficient balance');
+                }
             }
-            console.log('Ticket deleted successfully:', deletedTicket);
-            return deletedTicket;
-        } catch (error) {
-            console.error('Error deleting course:', error);
-            throw error;
+        
+            // Update wallet balance and add transaction record
+            await UserSchema.findByIdAndUpdate(userId, {
+                $inc: { 'wallet.balance': transactionType === 'debit' ? -transactionAmount : transactionAmount },
+                $push: {
+                    'wallet.transactions': {
+                        amount: transactionAmount,
+                        type: transactionType,
+                        date: new Date()
+                    }
+                }
+            }, { session });
         }
+
+        // Update the ticket details
+        const updatedTicket = await this.#model.findByIdAndUpdate(id, {
+            startStation: startStationId,
+            endStation: endStationId,
+            seatNumber: seatNumber,
+            journeyDate: new Date(journeyDate),
+            fare: newFare,
+        }, { new: true, session });
+
+        return updatedTicket;
     }
 
-    async getSingleTicket(courseId) {
-        // Your find single course logic here
+    async cancleTicket(session, id) {
+         const ticket = await this.#model.findOne({ _id: id });
+         if (!ticket) throw new NotFoundError('Ticket not found');
+ 
+         const train = await TrainSchema.findById(ticket.train);
+         if (!train) throw new NotFoundError('Train not found');
+ 
+         const refundAmount = ticket.fare;
+
+         await UserSchema.findByIdAndUpdate(ticket.user, {
+             $inc: { 'wallet.balance': refundAmount },
+             $push: {
+                 'wallet.transactions': {
+                     amount: refundAmount,
+                     type: 'refund',
+                     date: new Date()
+                 }
+             }
+         }, { session });
+ 
+         await UserSchema.findByIdAndUpdate(ticket.user, {
+             $pull: { tickets: id }
+         }, { session });
+ 
+        const data = await this.#model.deleteOne({ _id: id }, { session });
+        return data ;
+ 
+    }
+
+    async getSingleTicket(id) {
         try {
-            const foundTicket = await this.#model.findById(courseId)
-                // .populate('batch_ref');
+            const foundTicket = await this.#model.findById(id)
+            // .populate('');
             if (!foundTicket) {
                 throw new Error('Ticket not found');
             }
             return foundTicket;
         } catch (error) {
-            console.error('Error finding course:', error);
+            console.error('Error finding ticket:', error);
             throw error;
         }
     }
 
     async getAllTicket(query) {
-
-        const { semester_ref, department_ref } = query;
         try {
-            const course = await pagination(query, async (limit, offset, sortOrder) => {
-                const coursesPromise = this.#model.find({
-                    semester_ref: semester_ref,
-                    department_ref: department_ref
-                })
-                    .sort({ level: 1, term: 1, 'batch_ref.batch': 1 }) // Sort by level, term, and batch_ref's batch
+            const ticket = await pagination(query, async (limit, offset, sortOrder) => {
+                const ticketsPromise = this.#model.find({})
+                    .sort({  }) 
                     .skip(offset)
                     .limit(limit)
-                    .populate('batch_ref')
+                    // .populate('')
                     .exec();
                 const totalTicketsPromise = this.#model.estimatedDocumentCount().exec();
 
-                const [courses, totalTickets] = await Promise.all([coursesPromise, totalTicketsPromise]);
+                const [tickets, totalTickets] = await Promise.all([ticketsPromise, totalTicketsPromise]);
 
-                return { doc: courses, totalDoc: totalTickets };
+                return { doc: tickets, totalDoc: totalTickets };
             });
-            return course;
+            return ticket;
         } catch (error) {
-            console.error('Error finding all courses:', error);
+            console.error('Error finding all tickets:', error);
             throw error;
         }
-        // });
-    }
-
-    async getAllActiveTicket(payload) {
-        const { semester_ref, department_ref } = payload;
-        const course = this.#model.find({
-            semester_ref: semester_ref,
-            department_ref: department_ref,
-        })
-            .sort({ level: 1, term: 1, 'batch_ref.batch': 1 })
-            .populate('batch_ref')
-            .exec();
-        return course;
 
     }
-    async getNotUseActiveTicket(payload) {
-        const { semester_ref, department_ref } = payload;
-        const course = this.#model.find({
-            subject_flag:0,
-            semester_ref: semester_ref,
-            department_ref: department_ref,
-        })
-            .sort({ level: 1, term: 1, 'batch_ref.batch': 1 })
-            .populate('batch_ref')
-            .exec();
-        return course;
 
-    }
+
 
 }
 

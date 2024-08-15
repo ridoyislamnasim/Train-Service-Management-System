@@ -9,7 +9,7 @@ import {
   uploadWorker,
 } from '../../middleware/upload/index.js';
 import isArrayElementExist from '../../utils/isArrayElementExist.js';
-import batchRepository from './user.repository.js';
+import userRepository from './user.repository.js';
 import { isMainThread } from 'worker_threads';
 import { generateAccessToken, generateRefreshToken } from '../../utils/jwt.js';
 
@@ -54,52 +54,52 @@ class UserService extends BaseService {
     }
 
 	async getAllUserPagination(payload,session) {
-		const batch = await this.#repository.getAllUserPagination(payload, session);
-		return batch;
+		const user = await this.#repository.getAllUserPagination(payload, session);
+		return user;
 	}
 
     async getAllUser(session) {
-		const batch = await this.#repository.getAllUser( session);
-		return batch;
+		const user = await this.#repository.getAllUser( session);
+		return user;
 	}
 
 	async getSingleUser(id) {
-        const batch = await this.#repository.getSingleUser(id);
-        if (!batch) throw new NotFoundError(` batch not found by id`);
-        return batch;
+        const user = await this.#repository.getSingleUser(id);
+        if (!user) throw new NotFoundError(` user not found by id`);
+        return user;
     }
 
 	async deleteUser(id) {
-        const batch = await this.#repository.deleteUser(id);
-        if (!batch) throw new NotFoundError(` batch not found by id`);
-        return batch;
+        const user = await this.#repository.deleteUser(id);
+        if (!user) throw new NotFoundError(` user not found by id`);
+        return user;
     }
 
 	async updateUser(payload,id , session) {
-        const { batch } = payload;
+        const { user } = payload;
 		
 		console.log(payload)// botn are required
-		if (!batch) {
+		if (!user) {
             throw new NotFoundError('fill up required fields');
         }
 
-        // check if batch_id is already exist without this user
-        const isUserIdExist = await this.#repository.isUserExistWithoutThisId(batch, id);
+        // check if user_id is already exist without this user
+        const isUserIdExist = await this.#repository.isUserExistWithoutThisId(user, id);
         if (isUserIdExist) {
-            throw new NotFoundError('batch already exist');
+            throw new NotFoundError('user already exist');
         }
 
 
-		const batchResult = await this.#repository.updateUser(payload,id , session);
-    if (!batchResult) throw new NotFoundError(` batch not found by id`);
-		return batchResult;
+		const userResult = await this.#repository.updateUser(payload,id , session);
+    if (!userResult) throw new NotFoundError(` user not found by id`);
+		return userResult;
 	}
 
 	async updateUserStatus( payload, id ) {
-        const batchStatusUpdate = await this.#repository.updateUserStatus(payload,id);
-        if (!batchStatusUpdate) throw new NotFoundError(` batch not found by id`);
-        return batchStatusUpdate;
+        const userStatusUpdate = await this.#repository.updateUserStatus(payload,id);
+        if (!userStatusUpdate) throw new NotFoundError(` user not found by id`);
+        return userStatusUpdate;
       }
 }
 
-export default new UserService(batchRepository, 'batch');
+export default new UserService(userRepository, 'user');
