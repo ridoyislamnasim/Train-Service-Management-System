@@ -202,6 +202,19 @@ class TicketRepository extends BaseRepository {
 
     }
 
+    async getSingleUserAllTicket(session, id){
+        console.log('id',id);
+        const tickets = await this.#model.find({ user: id })
+        .populate({
+            path: 'train', 
+            select: 'name number stops fareRatePerStop'
+        }).populate({
+            path: 'startStation endStation', 
+            select: 'name'
+        });
+        return tickets;
+    }
+
 
 
 }

@@ -3,18 +3,20 @@ import { upload } from '../../middleware/upload/index.js';
 import controller from '../../modules/ticket/ticket.controller.js';
 import jwtAuth from '../../middleware/auth/jwtAuth.js';
 
-const TricketRouter = Router();
-TricketRouter.use(jwtAuth('user'));
+const TicketRouter = Router();
+TicketRouter.use(jwtAuth('user'));
 
-TricketRouter
+TicketRouter
   .post('/', controller.createTicket)
   .get('/', controller.getAllTicket)
 
-TricketRouter
+TicketRouter
   .route('/:id')
   .get(controller.getSingleTicket)
   .put( controller.updateTicket) 
   .delete(controller.cancleTicket);
+TicketRouter
+  .route('/user/:id')
+  .get(controller.getSingleUserAllTicket)
 
-
-export default TricketRouter;
+export default TicketRouter;

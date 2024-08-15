@@ -65,12 +65,14 @@ class TicketController {
         res.status(resDoc.statusCode).json(resDoc);
     });
 
-    updateTicketStatus = catchError(async (req, res, next) => {
-        const { id } = req.params;
-        await ticketService.updateTicketStatus(id, req.query);
-        const resDoc = responseHandler(200, 'Ticket Update Status successfully');
+    getSingleUserAllTicket = withTransaction(async (req, res, next, session) => {
+        const {id}=req.params;
+        const ticket  = await ticketService.getSingleUserAllTicket(session,id);
+        const resDoc = responseHandler(200, 'user ticket successfully', ticket);
         res.status(resDoc.statusCode).json(resDoc);
-      });
+    });
+
+
 
 }
 

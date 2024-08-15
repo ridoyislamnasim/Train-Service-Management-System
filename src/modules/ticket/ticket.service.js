@@ -44,16 +44,12 @@ class TicketService extends BaseService {
         if (!ticket) throw new NotFoundError(`Ticket not found by id`);
         return ticket;
     }
+ async getSingleUserAllTicket(session,id) {
+  const ticket = await this.#repository.getSingleUserAllTicket(session,id);
+  if (!ticket) throw new NotFoundError(`Ticket not found by id`);
+  return ticket;
+ }
 
-    async updateTicketStatus(riderId, query) {
-        let riderObj = {};
-        if (query?.status) {
-          riderObj.status = parseInt(query?.status);
-        }
-        const riderUpdate = await this.#repository.updateById(riderId, riderObj);
-        if (riderUpdate[0] <= 0) throw new NotFoundError('Ticket Id not found');
-        return riderUpdate;
-    }
 
 }
 
