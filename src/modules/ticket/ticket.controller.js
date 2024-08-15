@@ -41,7 +41,7 @@ class TicketController {
         res.status(resDoc.statusCode).json(resDoc);
     })
 
-    updateTicket = catchError(async (req, res, next) => {
+    updateTicket = withTransaction(async (req, res, next, session) => {
         const userID = req?.user?.id
         const payload = {
             user:userID,
@@ -53,7 +53,7 @@ class TicketController {
         }   
         const {id}=req.params;
     
-        const ticket = await ticketService.updateTicket(payload , id);
+        const ticket = await ticketService.updateTicket(payload , id, session);
         const resDoc = responseHandler(200,'Ticket update successfully');
         return res.status(201).json(resDoc);
     });

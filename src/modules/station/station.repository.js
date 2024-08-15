@@ -53,13 +53,7 @@ class StationRepository extends BaseRepository {
         }
         // });
     }
-    async getAllStation(payload) {
-        const station = this.#model.find({
-        })
-            .sort({})
-            .exec();
-        return station;
-    }
+
 
     async getSingleStation(id) {
         try {

@@ -38,7 +38,7 @@ class UserService extends BaseService {
         if (!isPasswordMatch) throw new NotFoundError('unauthorized access');
         const user_info_encrypted = {
             id: authAuth._id || null,
-            name: authAuth.user_name || null,
+            name: authAuth.name || null,
             email: authAuth.email || null,
             role: authAuth.role || null,
         };

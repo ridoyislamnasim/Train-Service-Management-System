@@ -4,7 +4,7 @@ import controller from '../../modules/Train/Train.controller.js';
 import jwtAuth from '../../middleware/auth/jwtAuth.js';
 
 const TrainRouter = Router();
-TrainRouter.use(jwtAuth('user'));
+TrainRouter.use(jwtAuth('admin'));
 
 TrainRouter
   .post('/', upload.any(), controller.createTrain)

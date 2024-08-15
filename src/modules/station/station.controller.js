@@ -28,15 +28,6 @@ class StationController {
         res.status(resDoc.statusCode).json(resDoc);
     })
 
-    getAllStation = catchError(async(req,res,next)=>{
-        const payload ={
-            semester_ref: req.semester?._id,
-            department_ref: req.user?.department_ref[0],
-        }
-        const station = await stationService.getAllStation(payload);
-        const resDoc = responseHandler(200, 'Station get Successfully',station);
-        res.status(resDoc.statusCode).json(resDoc);
-    })
     getSingleStation = catchError(async(req,res,next)=>{
         const {id}=req.params;
         const station  = await stationService.getSingleStation(id)

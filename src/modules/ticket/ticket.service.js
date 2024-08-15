@@ -34,8 +34,8 @@ class TicketService extends BaseService {
         return ticket;
     }
 	
-	async updateTicket(payload , id) {
-		const ticket = await this.#repository.updateTicket(payload,id);
+	async updateTicket(payload , id, session) {
+		const ticket = await this.#repository.updateTicket(payload,id, session);
 		return ticket;
 	}
 

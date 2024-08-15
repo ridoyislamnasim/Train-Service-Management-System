@@ -28,10 +28,7 @@ class StationService extends BaseService {
 		const station = await this.#repository.getAllStationPagination(query);
 		return station;
 	}
-  async getAllStation(payload) {
-    const station = await this.#repository.getAllStation(payload);
-		return station;
-	}
+
   async getSingleStation(id) {
     const station = await this.#repository.getSingleStation(id);
     if (!station) throw new NotFoundError(`Station not found by id`);

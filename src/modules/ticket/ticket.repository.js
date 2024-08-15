@@ -72,26 +72,26 @@ class TicketRepository extends BaseRepository {
 
     }
 
-    async updateTicket(payload,id) {
-        const { startStation, endStation, seatNumber, journeyDate } = payload;
+    async updateTicket(payload,id, session) {
+        const {user, train, startStation, endStation, seatNumber, journeyDate } = payload;
         if (!user ||!train ||!startStation ||!endStation ||!seatNumber ||!journeyDate) throw new NotFoundError('User, train, startStation, endStation, seatNumber, journeyDate are required');
 
         const ticket = await this.#model.findOne({ _id: id, user: user });
         if (!ticket) throw new NotFoundError('Ticket not found');
 
-        const train = await TrainSchema.findById(ticket.train);
-        if (!train) throw new NotFoundError('Train not found');
+        const trainINFO = await TrainSchema.findById(ticket.train);
+        if (!trainINFO) throw new NotFoundError('Train not found');
 
         const startStationId = new mongoose.Types.ObjectId(startStation);
         const endStationId = new mongoose.Types.ObjectId(endStation);
-        const startStop = train.stops.find(stop => stop.station.equals(startStationId));
-        const endStop = train.stops.find(stop => stop.station.equals(endStationId));
+        const startStop = trainINFO.stops.find(stop => stop.station.equals(startStationId));
+        const endStop = trainINFO.stops.find(stop => stop.station.equals(endStationId));
         if (!startStop || !endStop) throw new NotFoundError("StartStop and EndStop not found");
 
         const startIndex = startStop.order;
         const endIndex = endStop.order;
         const numberOfStops = Math.abs(endIndex - startIndex);
-        const newFare = numberOfStops * train.fareRatePerStop;
+        const newFare = numberOfStops * trainINFO.fareRatePerStop;
 
         const fareDifference = newFare - ticket.fare;
 
@@ -100,13 +100,13 @@ class TicketRepository extends BaseRepository {
             const transactionAmount = Math.abs(fareDifference);
         
             if (transactionType === 'debit') {
-                const userInfo = await UserSchema.findById(userId);
+                const userInfo = await UserSchema.findById(user);
                 if (userInfo.wallet.balance < transactionAmount) {
                     throw new Error('Insufficient balance');
                 }
             }
         
-            await UserSchema.findByIdAndUpdate(userId, {
+            await UserSchema.findByIdAndUpdate(user, {
                 $inc: { 'wallet.balance': transactionType === 'debit' ? -transactionAmount : transactionAmount },
                 $push: {
                     'wallet.transactions': {

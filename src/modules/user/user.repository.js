@@ -33,17 +33,6 @@ class UserRepository extends BaseRepository {
     return userObj;
   }
 
-  async createUser(payload, session) {
-    const { batch } = payload;
-
-    let batchObj = new UserSchema({
-      batch: batch,
-    });
-    const createUser = await batchObj.save({
-      //  session 
-    });
-    return createUser;
-  }
 
   async getSingleUser(id) {
     const user = await this.#model.findById(id)

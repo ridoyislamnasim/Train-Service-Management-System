@@ -8,7 +8,7 @@ StationRouter.use(jwtAuth('admin'));
 StationRouter
   .post('/', controller.createStation)
   .get('/', controller.getAllStationPagination)
-  .get('/all', controller.getAllStation);
+
 
 StationRouter
   .route('/:id')

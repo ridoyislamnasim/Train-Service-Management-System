@@ -4,7 +4,6 @@ import controller from '../../modules/user/user.controller.js';
 import jwtAuth from '../../middleware/auth/jwtAuth.js';
 
 const UserRouter = Router();
-// UserRouter.use(jwtAuth('administrator', 'co-administrator'));
 
 UserRouter
   .post('/registration',upload.any(), controller.registrationUser)

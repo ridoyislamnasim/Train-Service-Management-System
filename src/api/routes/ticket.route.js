@@ -4,7 +4,7 @@ import controller from '../../modules/ticket/ticket.controller.js';
 import jwtAuth from '../../middleware/auth/jwtAuth.js';
 
 const TicketRouter = Router();
-TicketRouter.use(jwtAuth('admin'));
+TicketRouter.use(jwtAuth('user'));
 
 TicketRouter
   .post('/', controller.createTicket)
