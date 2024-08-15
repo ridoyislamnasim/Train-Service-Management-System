@@ -14,6 +14,4 @@ StationRouter
   .put(controller.updateStation)
   .delete(controller.deleteStation);
 
-
-
 export default StationRouter;
